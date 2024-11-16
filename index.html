@@ -114,11 +114,6 @@
     let todoState = [];
     let oldTodoState = [];
 
-    function markAsDone(todoId) {
-      const parent = document.getElementById(todoId);
-      parent.children[2].innerHTML = "Done!";
-    }
-
     function deleteTodo(todoId) {
       todoState = todoState.filter((todo) => todo.id !== todoId);
       updateState(todoState);
