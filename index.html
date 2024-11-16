@@ -1,0 +1,228 @@
+<!-- Better Solution (Assignment) -->
+<!-- What React do? it calculates the diff between the states -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f4f8;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 300px;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      button {
+        margin-top: 20px;
+        margin-right: 20px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      #todos {
+        margin-top: 20px;
+        width: 80%;
+        max-width: 600px;
+      }
+
+      .todo-container {
+        display: flex;
+        flex-direction: column;
+        background: white;
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .todo-container > div {
+        margin-bottom: 5px;
+        font-size: 16px;
+      }
+
+      .todo-container > div:first-child {
+        font-weight: bold;
+        font-size: 18px;
+        color: #333;
+      }
+
+      .todo-container > button {
+        margin: 5px 0;
+        font-size: 14px;
+        background-color: #28a745;
+      }
+
+      .todo-container > button.delete {
+        background-color: #dc3545;
+      }
+
+      .todo-container > button.edit {
+        background-color: #ffc107;
+        color: #333;
+      }
+
+      .todo-container > button:hover {
+        filter: brightness(0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <input type="text" id="title" placeholder="Todo title" /> <br />
+    <br />
+    <input type="text" id="description" placeholder="Todo description" /> <br />
+    <br />
+    <button onclick="addTodo()">Add todo</button>
+
+    <div id="todos"></div>
+  </body>
+  <script>
+    let globalId = 1;
+    let todoState = [];
+    let oldTodoState = [];
+
+    function markAsDone(todoId) {
+      const parent = document.getElementById(todoId);
+      parent.children[2].innerHTML = "Done!";
+    }
+
+    function deleteTodo(todoId) {
+      todoState = todoState.filter((todo) => todo.id !== todoId);
+      updateState(todoState);
+    }
+
+    function editTodo(todoId) {
+      const todo = todoState.find((todo) => todo.id === todoId);
+
+      if (!todo) {
+        alert("Todo not found! It might have been deleted.");
+        return;
+      }
+
+      const newTitle = prompt("Enter new title:", todo.title);
+      const newDescription = prompt("Enter new description:", todo.description);
+
+      if (newTitle !== null && newDescription !== null) {
+        todo.title = newTitle.trim();
+        todo.description = newDescription.trim();
+        updateTodo(todo, todo);
+        updateState(todoState);
+      }
+    }
+
+    function createTodo(title, description, id) {
+      const container = document.createElement("div");
+      const firstElement = document.createElement("div");
+      firstElement.innerHTML = title;
+      const secondElement = document.createElement("div");
+      secondElement.innerHTML = description;
+
+      const deleteButton = document.createElement("button");
+      deleteButton.innerHTML = "Delete";
+      deleteButton.setAttribute("onclick", `deleteTodo(${id})`);
+
+      const editButton = document.createElement("button");
+      editButton.innerHTML = "Edit";
+      editButton.setAttribute("onclick", `editTodo(${id})`);
+
+      container.appendChild(firstElement);
+      container.appendChild(secondElement);
+      container.appendChild(editButton);
+      container.appendChild(deleteButton);
+      container.setAttribute("id", id);
+      return container;
+    }
+
+    function removeTodo(todo) {
+      const element = document.getElementById(todo.id);
+      element.parentNode.removeChild(element);
+    }
+
+    function updateTodo(oldTodo, newTodo) {
+      const element = document.getElementById(oldTodo.id);
+      element.children[0].innerHTML = newTodo.title;
+      element.children[1].innerHTML = newTodo.description;
+    }
+
+    function updateState(newTodos) {
+      // Find added, deleted, and updated todos
+      const added = newTodos.filter(
+        (newTodo) => !oldTodoState.some((oldTodo) => oldTodo.id === newTodo.id)
+      );
+
+      const deleted = oldTodoState.filter(
+        (oldTodo) => !newTodos.some((newTodo) => newTodo.id === oldTodo.id)
+      );
+
+      const updated = newTodos.filter((newTodo) => {
+        const oldTodo = oldTodoState.find((obj) => obj.id === newTodo.id);
+        return (
+          oldTodo &&
+          (oldTodo.title !== newTodo.title ||
+            oldTodo.description !== newTodo.description)
+        );
+      });
+
+      // Apply changes
+      const todosContainer = document.getElementById("todos");
+      added.forEach((todo) => {
+        const todoElement = createTodo(todo.title, todo.description, todo.id);
+        todosContainer.appendChild(todoElement);
+      });
+
+      deleted.forEach(removeTodo);
+
+      updated.forEach((newTodo) => {
+        const oldTodo = oldTodoState.find((obj) => obj.id === newTodo.id);
+        updateTodo(oldTodo, newTodo);
+      });
+
+      // update old state
+      oldTodoState = [...newTodos];
+    }
+
+    function addTodo() {
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+      todoState.push({
+        title: title,
+        description: description,
+        id: globalId++,
+      });
+      updateState(todoState);
+    }
+  </script>
+</html>
